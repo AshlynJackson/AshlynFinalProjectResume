@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Lets Play Tic Tac Toe!!</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: lightblue;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+    h1 {
+      color: #000000;
+  
+    }
+    h2{
+      color: purple
+    }
+    #board {
+      display: grid;
+      grid-template-columns: repeat(3, 100px);
+      grid-template-rows: repeat(3, 100px);
+      gap: 5px;
+      margin-bottom: 20px;
+    }
+    .cell {
+      background-color: #fff;
+      border: 2px solid #333;
+      font-size: 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+    .cell.disabled {
+      pointer-events: none;
+      color: purple
+    }
+    #message {
+      font-size: 1.2rem;
+      margin-bottom: 15px;
+    }
+    #play-again {
+      padding: 10px 20px;
+      font-size: 1rem;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <h1> Lets Play My Favorite Game...</h1>
+  <h2> TIC- TAC- TOE </h2>
+  <div id="message">Your move!</div>
+  <div id="board"></div>
+  <button id="play-again">Play Again</button>
+  <a href ="http://127.0.0.1:5500/index.html">Click here to return to My Resume.</a>
+  <p>     </p>
+  <a href ="http://127.0.0.1:5500/scratch.html" ><u></u>Click here to go back to My Hobbies...<u></u></a>
+
+  <script>
+    const board = document.getElementById('board');
+    const message = document.getElementById('message');
+    const playAgain = document.getElementById('play-again');
+    let cells = [];
+    let gameOver = false;
+
+    function createBoard() {
+      board.innerHTML = '';
+      cells = [];
+      gameOver = false;
+      message.textContent = "Your move!";
+      playAgain.style.display = 'none';
+
+      for (let i = 0; i < 9; i++) {
+        const cell = document.createElement('div');
+        cell.classList.add('cell');
+        cell.dataset.index = i;
+        cell.addEventListener('click', playerMove);
+        board.appendChild(cell);
+        cells.push('');
+      }
+    }
+
+    function playerMove(e) {
+      const index = e.target.dataset.index;
+      if (cells[index] || gameOver) return;
+
+      cells[index] = 'X';
+      e.target.textContent = 'X';
+      e.target.classList.add('disabled');
+
+      if (checkWin('X')) {
+        endGame("You win? That can't be!");
+        return;
+      }
+
+      if (cells.every(c => c)) {
+        endGame("It's a draw!");
+        return;
+      }
+
+      setTimeout(() => {
+        computerMove();
+      }, 300);
+    }
+
+    function computerMove() {
+      // Always win logic: simple unbeatable moves with minimax
+      const bestMove = getBestMove();
+      cells[bestMove] = 'O';
+      const cell = board.querySelector(`[data-index='${bestMove}']`);
+      cell.textContent = 'O';
+      cell.classList.add('disabled');
+
+      if (checkWin('O')) {
+        endGame("You Lose :(");
+        return;
+      }
+
+      if (cells.every(c => c)) {
+        endGame("It's a draw!");
+      }
+    }
+
+    function checkWin(player) {
+      const winPatterns = [
+        [0,1,2], [3,4,5], [6,7,8],
+        [0,3,6], [1,4,7], [2,5,8],
+        [0,4,8], [2,4,6]
+      ];
+      return winPatterns.some(pattern =>
+        pattern.every(index => cells[index] === player)
+      );
+    }
+
+    function endGame(result) {
+      gameOver = true;
+      message.textContent = result;
+      Array.from(document.getElementsByClassName('cell')).forEach(cell => {
+        cell.classList.add('disabled');
+      });
+      playAgain.style.display = 'block';
+    }
+
+    function getBestMove() {
+      let bestScore = -Infinity;
+      let move;
+      for (let i = 0; i < 9; i++) {
+        if (cells[i] === '') {
+          cells[i] = 'O';
+          let score = minimax(cells, 0, false);
+          cells[i] = '';
+          if (score > bestScore) {
+            bestScore = score;
+            move = i;
+          }
+        }
+      }
+      return move;
+    }
+
+    function minimax(boardState, depth, isMaximizing) {
+      if (checkWin('O')) return 10 - depth;
+      if (checkWin('X')) return depth - 10;
+      if (boardState.every(c => c)) return 0;
+
+      if (isMaximizing) {
+        let bestScore = -Infinity;
+        for (let i = 0; i < 9; i++) {
+          if (boardState[i] === '') {
+            boardState[i] = 'O';
+            let score = minimax(boardState, depth + 1, false);
+            boardState[i] = '';
+            bestScore = Math.max(score, bestScore);
+          }
+        }
+        return bestScore;
+      } else {
+        let bestScore = Infinity;
+        for (let i = 0; i < 9; i++) {
+          if (boardState[i] === '') {
+            boardState[i] = 'X';
+            let score = minimax(boardState, depth + 1, true);
+            boardState[i] = '';
+            bestScore = Math.min(score, bestScore);
+          }
+        }
+        return bestScore;
+      }
+    }
+
+    playAgain.addEventListener('click', createBoard);
+
+
+    createBoard();
+  </script>
+</body>
+</html>
